@@ -1,18 +1,18 @@
 import { createStore } from "redux";
 
-const add = document.querySelector("#add");
-const minus = document.querySelector("#minus");
-const number = document.querySelector("span");
+const form = document.querySelector("form");
+const input = document.querySelector("input");
+const ul = document.querySelector("ul");
 
 const ADD = "ADD";
-const MINUS = "MINUS";
+const DELETE = "DELETE";
 
-const reducer = (state = 0, action) => {
+const reducer = (state = [], action) => {
   switch (action.type) {
     case ADD:
-      return state + 1;
-    case MINUS:
-      return state - 1;
+      return [{ id: Date.now(), text: action.text }, ...state];
+    case DELETE:
+      return state.filter((toDo) => toDo.id !== action.id);
     default:
       return state;
   }
@@ -20,10 +20,36 @@ const reducer = (state = 0, action) => {
 
 const store = createStore(reducer);
 
-const onChange = () => {
-  number.innerText = store.getState();
+const addToDo = (text) => {
+  store.dispatch({ type: ADD, text });
 };
-store.subscribe(onChange);
 
-add.addEventListener("click", () => store.dispatch({ type: ADD }));
-minus.addEventListener("click", () => store.dispatch({ type: MINUS }));
+const deleteToDo = (e) => {
+  const id = e.target.parentNode.id;
+  store.dispatch({ type: DELETE, id: parseInt(id) });
+};
+
+const paintToDos = () => {
+  const toDos = store.getState();
+  ul.innerHTML = "";
+  toDos.forEach((toDo) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    li.id = toDo.id;
+    li.innerText = toDo.text;
+    btn.innerText = "DEL";
+    btn.addEventListener("click", deleteToDo);
+    li.appendChild(btn);
+    ul.appendChild(li);
+  });
+};
+store.subscribe(paintToDos);
+
+const onSubmit = (e) => {
+  e.preventDefault();
+  const toDo = input.value;
+  input.value = "";
+  addToDo(toDo);
+};
+
+form.addEventListener("submit", onSubmit);
